@@ -25,7 +25,7 @@ def search_field(fields, attname):
 
 
 def search_refind(execution, user_code):
-    """Поиск запуска"""
+    """Поиск запуска."""
     for temp_line in user_code.split('\n'):
         if re.search(execution, temp_line):
             return True
@@ -157,7 +157,8 @@ class TestGroup:
         description = 'Тестовое описание группы'
 
         assert Group.objects.all().count() == 0
-        group = Group.objects.create(title=title, slug=slug, description=description)
+        group = Group.objects.create(
+            title=title, slug=slug, description=description)
         assert Group.objects.all().count() == 1
         assert Group.objects.get(slug=slug).pk == group.pk
 

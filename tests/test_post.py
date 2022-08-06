@@ -105,13 +105,15 @@ class TestPostEditView:
             else f'/posts/{post_with_group.id}/edit'
         )
 
-        response = user_client.post(url, data={'text': text, 'group': post_with_group.group_id})
+        response = user_client.post(
+            url, data={'text': text, 'group': post_with_group.group_id})
 
         assert response.status_code in (301, 302), (
             'Проверьте, что со страницы `/posts/<post_id>/edit/` '
             'после создания поста перенаправляете на страницу поста'
         )
-        post = Post.objects.filter(author=post_with_group.author, text=text, group=post_with_group.group).first()
+        post = Post.objects.filter(
+            author=post_with_group.author, text=text, group=post_with_group.group).first()
         assert post is not None, (
             'Проверьте, что вы изменили пост при отправки формы на странице `/posts/<post_id>/edit/`'
         )

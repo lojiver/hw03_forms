@@ -4,16 +4,16 @@ from .models import Post, Group, User
 from .forms import PostForm
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.urls import reverse
+
 
 # Create your views here.
 
 
 def is_author(func):
     def check_user(request, *args, **kwargs):
-        if request.user == Post.author:
+        if Post.author == request.user:
             return func(request, *args, **kwargs)
-        return redirect('/auth/<post_id>')
+        return redirect('/auth/login')
     return check_user
 
 
@@ -26,15 +26,14 @@ def index(request):
     page_obj = paginator.get_page(page_number)
     context: dict = {
         'main_title': text,
-        'posts': page_obj
+        'page_obj': page_obj
     }
     return render(request, template, context)
 
 
-@login_required
-def group_posts(request, group_name):
+def group_posts(request, slug):
     template = 'posts/group_list.html'
-    group = get_object_or_404(Group, slug=group_name)
+    group = get_object_or_404(Group, slug=slug)
     post_list = group.posts.select_related('author', 'group')
     paginator = Paginator(post_list, 10)
     page_number = request.GET.get('page')
@@ -48,7 +47,6 @@ def group_posts(request, group_name):
     return render(request, template, context)
 
 
-@login_required
 def profile(request, username):
     template = 'posts/profile.html'
     user404 = get_object_or_404(User, username=username)
@@ -65,13 +63,11 @@ def profile(request, username):
     return render(request, template, context)
 
 
-@login_required
 def post_detail(request, post_id):
     template = 'posts/post_detail.html'
     post = get_object_or_404(Post, pk=post_id)
     context: dict = {
-        'post': post,
-        'post_detail_title': 'Вся информация о публикации'
+        'post': post
     }
     return render(request, template, context)
 
@@ -85,24 +81,27 @@ def post_create(request):
             new_post = form.save(commit=False)
             new_post.author = request.user
             new_post.pub_date = date.today()
-            new_post.save()              
+            new_post.save()
             return redirect('posts:profile', request.user)
         return render(request, template, {'form': form})
-    form = PostForm()    
+    form = PostForm()
     return render(request, template, {'form': form})
 
 
 @login_required
-@is_author
 def post_edit(request, post_id):
     template = 'posts/create_post.html'
-    is_edit=True
-    post = get_object_or_404(Post, id=post_id)
-    if request.method == 'POST':
-        form = PostForm(request.POST)
+    is_edit = True
+    post = get_object_or_404(Post,
+                             pk=post_id)
+    if post.author == request.user:
+        form = PostForm(request.POST, instance=post)
         if form.is_valid():
-            post = form.save()           
-            return redirect('posts:profile', request.user)
-        return render(request, template, {'form': form, 'is_edit': is_edit})
-    form = PostForm(instance=post)    
-    return render(request, template, {'form': form, 'is_edit': is_edit})
+            post = form.save()
+            return redirect('posts:post_detail', post_id)
+        form = PostForm(instance=post)
+        return render(request, template,
+                      context={'form': form,
+                               'post': post,
+                               'is_edit': is_edit})
+    redirect('posts:create_post')

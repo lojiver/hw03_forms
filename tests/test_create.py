@@ -15,7 +15,8 @@ class TestCreateView:
             response = user_client.get('/create/')
         assert response.status_code != 404, 'Страница `/create/` не найдена, проверьте этот адрес в *urls.py*'
         assert 'form' in response.context, 'Проверьте, что передали форму `form` в контекст страницы `/create/`'
-        assert len(response.context['form'].fields) == 2, 'Проверьте, что в форме `form` на страницу `/create/` 2 поля'
+        assert len(
+            response.context['form'].fields) == 2, 'Проверьте, что в форме `form` на страницу `/create/` 2 поля'
         assert 'group' in response.context['form'].fields, (
             'Проверьте, что в форме `form` на странице `/create/` есть поле `group`'
         )
@@ -45,7 +46,8 @@ class TestCreateView:
             assert False, f'''Страница `/create` работает неправильно. Ошибка: `{e}`'''
         url = '/create/' if response.status_code in (301, 302) else '/create'
 
-        response = user_client.post(url, data={'text': text, 'group': group.id})
+        response = user_client.post(
+            url, data={'text': text, 'group': group.id})
 
         assert response.status_code in (301, 302), (
             'Проверьте, что со страницы `/create/` после создания поста, '
@@ -63,7 +65,8 @@ class TestCreateView:
             'Проверьте, что со страницы `/create/` после создания поста, '
             f'перенаправляете на страницу профиля автора `/profile/{user.username}`'
         )
-        post = Post.objects.filter(author=user, text=text, group__isnull=True).first()
+        post = Post.objects.filter(
+            author=user, text=text, group__isnull=True).first()
         assert post is not None, 'Проверьте, что вы сохранили новый пост при отправке формы на странице `/create/`'
         assert response.url == f'/profile/{user.username}/', (
             f'Проверьте, что перенаправляете на страницу профиля автора `/profile/{user.username}`'

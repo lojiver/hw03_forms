@@ -35,8 +35,10 @@
            {{ post.text }}
           </p>
         </article>
+        {% if user.username == post.author.username %}
         <a href="{% url 'posts:post_edit' post.pk %}">
                 Редактировать запись
               </a>
+         {% endif %}     
       </div> 
       {% endblock content %}
