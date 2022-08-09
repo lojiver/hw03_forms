@@ -32,7 +32,7 @@
         </aside>
         <article class="col-12 col-md-9">
           <p>
-           {{ post.text }}
+           {{ post.text|linebreaksbr }}
           </p>
         </article>
         {% if user.username == post.author.username %}

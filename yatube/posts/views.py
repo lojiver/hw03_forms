@@ -3,10 +3,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from .models import Post, Group, User
 from .forms import PostForm
 from django.contrib.auth.decorators import login_required
-from django.core.paginator import Paginator
-
-
-# Create your views here.
+from .utils import paginate_page
 
 
 def is_author(func):
@@ -19,13 +16,9 @@ def is_author(func):
 
 def index(request):
     template = 'posts/index.html'
-    text: str = 'Это главная страница проекта Yatube'
-    post_list = Post.objects.all()
-    paginator = Paginator(post_list, 10)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    posts = Post.objects.select_related('group', 'author')
+    page_obj = paginate_page(request, posts)
     context: dict = {
-        'main_title': text,
         'page_obj': page_obj
     }
     return render(request, template, context)
@@ -34,13 +27,9 @@ def index(request):
 def group_posts(request, slug):
     template = 'posts/group_list.html'
     group = get_object_or_404(Group, slug=slug)
-    post_list = group.posts.select_related('author', 'group')
-    paginator = Paginator(post_list, 10)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-    text: str = 'Здесь будет информация о группах проекта Yatube'
+    posts = group.posts.select_related('author', 'group')
+    page_obj = paginate_page(request, posts)
     context: dict = {
-        'group_posts_title': text,
         'group': group,
         'page_obj': page_obj
     }
@@ -49,14 +38,11 @@ def group_posts(request, slug):
 
 def profile(request, username):
     template = 'posts/profile.html'
-    user404 = get_object_or_404(User, username=username)
-    user_posts = user404.posts.select_related('author', 'group')
-    paginator = Paginator(user_posts, 10)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    user = get_object_or_404(User, username=username)
+    user_posts = user.posts.select_related('author', 'group')
+    page_obj = paginate_page(request, user_posts)
     context: dict = {
-        'author': user404,
-        'user_posts': user_posts,
+        'author': user,
         'page_obj': page_obj,
         'profile_title': 'Страница пользователя'
     }
@@ -75,17 +61,22 @@ def post_detail(request, post_id):
 @login_required
 def post_create(request):
     template = 'posts/create_post.html'
-    if request.method == 'POST':
-        form = PostForm(request.POST)
-        if form.is_valid():
-            new_post = form.save(commit=False)
-            new_post.author = request.user
-            new_post.pub_date = date.today()
-            new_post.save()
-            return redirect('posts:profile', request.user)
-        return render(request, template, {'form': form})
-    form = PostForm()
+    form = PostForm(request.POST or None)
+    if form.is_valid():
+        new_post = form.save(commit=False)
+        new_post.author = request.user
+        new_post.pub_date = date.today()
+        new_post.save()
+        return redirect('posts:profile', request.user)
     return render(request, template, {'form': form})
+
+
+'''Денис, но этот код не работает, как надо. 
+Вместо сохранения имеющегося поста он создаёт новый. 
+Я очень удивилась, что меня пайтесты пропустили с этой ошибкой, 
+но теперь меня с ней пропускаешь и ты (в Яндексе на "ты" вроде бы,
+мне очень непривычно "выкать", но, если это неуместно или некомфортно,
+то я прошу прощения и больше не буду)'''
 
 
 @login_required
@@ -95,11 +86,10 @@ def post_edit(request, post_id):
     post = get_object_or_404(Post,
                              pk=post_id)
     if post.author == request.user:
-        form = PostForm(request.POST, instance=post)
+        form = PostForm(request.POST or None, instance=post)
         if form.is_valid():
             post = form.save()
             return redirect('posts:post_detail', post_id)
-        form = PostForm(instance=post)
         return render(request, template,
                       context={'form': form,
                                'post': post,
