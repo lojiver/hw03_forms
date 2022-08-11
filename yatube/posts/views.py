@@ -43,7 +43,7 @@ def profile(request, username):
     page_obj = paginate_page(request, user_posts)
     context: dict = {
         'author': user,
-        'page_obj': page_obj,        
+        'page_obj': page_obj,
     }
     return render(request, template, context)
 

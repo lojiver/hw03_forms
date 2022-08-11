@@ -31,14 +31,14 @@ class PostsURLTests(TestCase):
         self.user_author = User.objects.get(username='HasNoName')
         self.user_not_author = User.objects.create_user(username='NotAuthor')
         self.authorized_not_author = Client()
-        self.authorized_not_author.force_login(self.user_not_author)  
+        self.authorized_not_author.force_login(self.user_not_author)
         self.authorized_author = Client()
-        self.authorized_author.force_login(self.user_author)      
+        self.authorized_author.force_login(self.user_author)
 
     def test_homepage(self):
         response = self.guest_client.get('/')
         self.assertEqual(response.status_code, 200)
-    
+
     def test_urls_responses(self):
         urls = {
             'index': '/',
@@ -60,7 +60,7 @@ class PostsURLTests(TestCase):
                     )
                 else:
                     self.assertEqual(response.status_code, 200)
-    
+
     def test_urls_authorised(self):
         urls = {
             'post_edit': '/posts/1/edit/',
@@ -74,7 +74,7 @@ class PostsURLTests(TestCase):
             urls['post_edit']
         )
         self.assertRedirects(response_post_edit, '/create/')
-    
+
     def test_urls_author(self):
         response = self.authorized_author.get(
             '/posts/1/edit/'
