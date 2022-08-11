@@ -43,8 +43,7 @@ def profile(request, username):
     page_obj = paginate_page(request, user_posts)
     context: dict = {
         'author': user,
-        'page_obj': page_obj,
-        'profile_title': 'Страница пользователя'
+        'page_obj': page_obj,        
     }
     return render(request, template, context)
 
@@ -71,14 +70,6 @@ def post_create(request):
     return render(request, template, {'form': form})
 
 
-'''Денис, но этот код не работает, как надо.
-Вместо сохранения имеющегося поста он создаёт новый.
-Я очень удивилась, что меня пайтесты пропустили с этой ошибкой,
-но теперь меня с ней пропускаешь и ты (в Яндексе на "ты" вроде бы,
-мне очень непривычно "выкать", но, если это неуместно или некомфортно,
-то я прошу прощения и больше не буду)'''
-
-
 @login_required
 def post_edit(request, post_id):
     template = 'posts/create_post.html'
@@ -88,10 +79,10 @@ def post_edit(request, post_id):
     if post.author == request.user:
         form = PostForm(request.POST or None, instance=post)
         if form.is_valid():
-            post = form.save()
+            form.save()
             return redirect('posts:post_detail', post_id)
         return render(request, template,
                       context={'form': form,
                                'post': post,
                                'is_edit': is_edit})
-    redirect('posts:create_post')
+    return redirect('posts:post_create')
