@@ -73,7 +73,7 @@ class PostsURLTests(TestCase):
         response_post_edit = self.authorized_not_author.get(
             urls['post_edit']
         )
-        self.assertRedirects(response_post_edit, '/create/')
+        self.assertRedirects(response_post_edit, '/posts/1/')
 
     def test_urls_author(self):
         response = self.authorized_author.get(

@@ -1,4 +1,3 @@
-from datetime import date
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Post, Group, User
 from .forms import PostForm
@@ -64,7 +63,6 @@ def post_create(request):
     if form.is_valid():
         new_post = form.save(commit=False)
         new_post.author = request.user
-        new_post.pub_date = date.today()
         new_post.save()
         return redirect('posts:profile', request.user)
     return render(request, template, {'form': form})
@@ -76,13 +74,14 @@ def post_edit(request, post_id):
     is_edit = True
     post = get_object_or_404(Post,
                              pk=post_id)
-    if post.author == request.user:
-        form = PostForm(request.POST or None, instance=post)
-        if form.is_valid():
-            form.save()
-            return redirect('posts:post_detail', post_id)
-        return render(request, template,
-                      context={'form': form,
-                               'post': post,
-                               'is_edit': is_edit})
-    return redirect('posts:post_create')
+    if post.author != request.user:
+        return redirect('posts:post_detail', post_id)
+    form = PostForm(request.POST or None, instance=post)
+    if form.is_valid():
+        form.save()
+        return redirect('posts:post_detail', post_id)
+    return render(request, template, context={
+        'form': form,
+        'post': post,
+        'is_edit': is_edit
+    })
